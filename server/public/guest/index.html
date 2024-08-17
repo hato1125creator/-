@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ゲスト予約フォーム</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <h1>ゲスト予約フォーム</h1>
+    <form id="reservation-form">
+        <label for="name">名前:</label>
+        <input type="text" id="name" name="name" required><br><br>
+        <label for="contact">連絡先:半角でお願いします。このメールアドレスに入場QRコードを送信します。</label>
+        <input type="text" id="contact" name="contact" required><br><br>
+        <label for="relationship">関係性:</label>
+        <select id="relationship" name="relationship" required>
+            <option value="保護者">保護者</option>
+            <option value="友達">友達</option>
+            <option value="本校志望の中学生">本校志望の中学生</option>
+        </select><br><br>
+        <button type="submit">予約送信</button>
+    </form>
+    <button onclick="window.location.href='/admin/index.html'">管理者画面に移動</button>
+    <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>管理者画面</title>
+    <style>
+        /* 基本的なスタイル設定 */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+        th, td {
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f4f4f4;
+        }
+        .search-container {
+            margin-bottom: 20px;
+        }
+        .qr-code {
+            width: 100px;
+            height: 100px;
+        }
+        #reader {
+            width: 600px;
+            height: 400px;
+            margin-bottom: 20px;
+        }
+        #attendance-count {
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>管理者画面</h1>
+    <h2>予約一覧</h2>
+    <table id="reservation-table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>名前</th>
+                <th>連絡先</th>
+                <th>状態</th>
+                <th>QRコード</th>
+                <th>アクション</th>
+            </tr>
+        </thead>
+        <tbody id="reservation-table-body">
+            <!-- 予約データがここに表示されます -->
+        </tbody>
+    </table>
+
+    <h2>ゲスト検索</h2>
+    <div class="search-container">
+        <input type="text" id="search-query" placeholder="検索...">
+        <button onclick="searchGuests()">検索</button>
+    </div>
+    
+    <div id="search-results"></div>
+
+    <h2>リアルタイム入場者数</h2>
+    <p id="attendance-count">現在の入場者数: 0</p>
+
+    <h2>QRコード読み取り</h2>
+    <div id="reader"></div>
+    <p id="result">QRコードがスキャンされるとここに結果が表示されます。</p>
+
+    <!-- HTML5Qrcodeライブラリの読み込み -->
+    <script src="https://unpkg.com/html5-qrcode/minified/html5-qrcode.min.js"></script>
+    <!-- 自作のスクリプトファイルの読み込み -->
+    <script src="script.js"></script>
+</body>
+</html>

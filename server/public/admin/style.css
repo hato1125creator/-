@@ -1,0 +1,42 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f4f4f4;
+}
+
+h1, h2 {
+    text-align: center;
+    color: #333;
+}
+
+table {
+    width: 80%;
+    margin: 20px auto;
+    border-collapse: collapse;
+}
+
+table, th, td {
+    border: 1px solid #ddd;
+}
+
+th, td {
+    padding: 12px;
+    text-align: center;
+}
+
+#search-guest {
+    text-align: center;
+    margin: 20px 0;
+}
+
+#search-input {
+    padding: 8px;
+    width: 60%;
+}
+
+#search-button {
+    padding: 8px 16px;
+    margin-left: 10px;
+    cursor: pointer;
+}
