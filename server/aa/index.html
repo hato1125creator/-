@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QRコードスキャナー</title>
+</head>
+<body>
+    <h1>QRコードスキャナー</h1>
+    <div id="qr-reader" style="width: 600px; height: 400px;"></div>
+    <p id="result">スキャン結果がここに表示されます。</p>
+
+    <!-- 正しいCDN URLを使用 -->
+    <script src="https://cdn.jsdelivr.net/npm/html5-qrcode/minified/html5-qrcode.min.js"></script>
+    <script>
+        function initQrScanner() {
+            const html5QrCode = new Html5Qrcode("qr-reader");
+            html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, (decodedText, decodedResult) => {
+                document.getElementById('result').textContent = `スキャン結果: ${decodedText}`;
+            }).catch(error => {
+                console.error('QRコードスキャンエラー:', error);
+            });
+        }
+
+        window.onload = initQrScanner;
+    </script>
+</body>
+</html>
