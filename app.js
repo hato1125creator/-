@@ -1,4 +1,6 @@
+//ldsy vaiw nnkq glgs
 const express = require('express');
+const cors = require('cors');
 const bodyParser = require('body-parser');
 const mysql = require('mysql');
 const path = require('path');
@@ -6,6 +8,11 @@ const QRCode = require('qrcode');
 const nodemailer = require('nodemailer');
 const app = express();
 const port = 3006;
+
+app.use(express.static(path.join(__dirname, 'public')));
+app.use(cors()); // CORS設定
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
 
 // MySQL接続設定
 const connection = mysql.createConnection({
@@ -28,17 +35,9 @@ const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
         user: 'hato2008125@gmail.com',
-        pass: 'ldsy vaiw nnkq glgs' // パスワードは実際のものに置き換えてください
+        pass: 'ldsy vaiw nnkq glgs' // 環境変数からパスワードを取得
     }
 });
-
-// ミドルウェア設定
-app.use(express.static(path.join(__dirname, 'public')));
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
-
-// サンプルデータ
-let attendanceCount = 0;
 
 // 予約処理エンドポイント
 app.post('/api/reserve', async (req, res) => {
@@ -48,14 +47,13 @@ app.post('/api/reserve', async (req, res) => {
     connection.query(sql, [name, contact, relationship], async (err, result) => {
         if (err) {
             console.error('予約情報の挿入エラー:', err.message);
-            res.status(500).json({ message: '予約の保存に失敗しました', error: err.message });
-            return;
+            return res.status(500).json({ message: '予約の保存に失敗しました', error: err.message });
         }
 
         console.log('予約情報が保存されました:', result);
 
         // QRコード生成
-        const qrData = `http://localhost:3006/guest/verify?id=${result.insertId}`;
+        const qrData = `http://localhost:${port}/guest/verify?id=${result.insertId}`;
         try {
             const qrCodeDataUrl = await QRCode.toDataURL(qrData);
             console.log('QRコードURL:', qrCodeDataUrl);
@@ -67,15 +65,8 @@ app.post('/api/reserve', async (req, res) => {
                 subject: '予約確認',
                 html: `
                     <p>予約が完了しました。以下のQRコードを受付でご提示ください。</p>
-                    <p><img src="${qrCodeDataUrl}" alt="QR Code" ></p>
-                `,
-                attachments: [
-                    {
-                        filename: 'qrcode.png',
-                        content: qrCodeDataUrl.split(';base64,').pop(),
-                        encoding: 'base64'
-                    }
-                ]
+                    <img src="${qrCodeDataUrl}" alt="QR Code" />
+                `
             };
             await transporter.sendMail(mailOptions);
             res.json({ message: '予約が成功しました。確認メールを送信しました。' });
@@ -86,29 +77,36 @@ app.post('/api/reserve', async (req, res) => {
     });
 });
 
-// その他のルート
+// ルート設定
 app.get('/', (req, res) => {
     res.redirect('/admin');
 });
 
 app.get('/admin', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'admin', 'admin.html'));
+    res.sendFile(path.join(__dirname, 'server','public', 'admin', 'index.html'));
 });
 
+app.get('/guest', (req, res) => {
+    res.sendFile(path.join(__dirname, 'server','public', 'guest', 'index.html'));
+});
+
+
 app.get('/guest/verify', (req, res) => {
-    // QRコードによるゲスト認証ロジック
     const id = req.query.id;
     res.send(`ゲストID: ${id}`);
 });
 
+
+app.get('/aa', (req, res) => {
+    res.sendFile(path.join(__dirname, 'server', 'aa', 'index.html'));
+});
 // 予約情報取得エンドポイント
 app.get('/api/reservations', (req, res) => {
     const sql = 'SELECT * FROM reservations';
     connection.query(sql, (err, results) => {
         if (err) {
             console.error('予約情報取得エラー:', err.message);
-            res.status(500).json({ message: '予約情報の取得に失敗しました', error: err.message });
-            return;
+            return res.status(500).json({ message: '予約情報の取得に失敗しました', error: err.message });
         }
         res.json(results);
     });
@@ -119,14 +117,11 @@ app.post('/api/reservations/:id', (req, res) => {
     const { status } = req.body;
     const { id } = req.params;
 
-    console.log(`Updating reservation with ID: ${id} to status: ${status}`);
-
     const sql = 'UPDATE reservations SET status = ? WHERE id = ?';
     connection.query(sql, [status, id], (err, results) => {
         if (err) {
             console.error('予約情報の更新エラー:', err.message);
-            res.status(500).json({ message: '予約情報の更新に失敗しました', error: err.message });
-            return;
+            return res.status(500).json({ message: '予約情報の更新に失敗しました', error: err.message });
         }
         res.json({ message: '予約情報が更新されました' });
     });
@@ -136,14 +131,11 @@ app.post('/api/reservations/:id', (req, res) => {
 app.delete('/api/reservations/:id', (req, res) => {
     const { id } = req.params;
 
-    console.log(`Deleting reservation with ID: ${id}`);
-
     const sql = 'DELETE FROM reservations WHERE id = ?';
     connection.query(sql, [id], (err, results) => {
         if (err) {
             console.error('予約削除エラー:', err.message);
-            res.status(500).json({ message: '予約の削除に失敗しました', error: err.message });
-            return;
+            return res.status(500).json({ message: '予約の削除に失敗しました', error: err.message });
         }
         res.json({ message: '予約が削除されました' });
     });
@@ -152,34 +144,17 @@ app.delete('/api/reservations/:id', (req, res) => {
 // 検索エンドポイント
 app.get('/api/search', (req, res) => {
     const searchQuery = req.query.q;
-    console.log('Received search query:', searchQuery);
 
     const sql = 'SELECT * FROM reservations WHERE name LIKE ? OR contact LIKE ?';
     const query = `%${searchQuery}%`;
 
-    console.log('Executing SQL query:', sql);
-
     connection.query(sql, [query, query], (err, results) => {
         if (err) {
             console.error('検索クエリエラー:', err.message);
-            res.status(500).send('サーバーエラー');
-            return;
+            return res.status(500).send('サーバーエラー');
         }
-        console.log('Search results:', results);
         res.json(results);
     });
-});
-
-// /api/attendance エンドポイントの追加
-app.get('/api/attendance', (req, res) => {
-    res.json({ count: attendanceCount });
-});
-
-// CORS設定を追加
-app.use((req, res, next) => {
-    res.header('Access-Control-Allow-Origin', '*');
-    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
-    next();
 });
 
 // 404 エラーハンドラー
@@ -187,6 +162,17 @@ app.use((req, res, next) => {
     res.status(404).send('ページが見つかりません');
 });
 
+// サーバー起動
 app.listen(port, () => {
     console.log(`サーバーが http://localhost:${port} で起動しました`);
+});
+
+
+
+
+app.use((req, res, next) => {
+    res.header('Access-Control-Allow-Origin', '*'); // または特定のオリジンを指定
+    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
+    next();
+
 });

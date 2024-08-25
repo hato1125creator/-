@@ -1,110 +1,122 @@
-document.addEventListener('DOMContentLoaded', () => {
-    fetchReservations();
-    updateAttendance();
-    startQRCodeScanner(); // QRコードスキャナーを開始
-});
-
-// 予約情報を取得して表示
-function fetchReservations() {
+// 予約情報を定期的に取得してテーブルに表示
+function updateReservations() {
     fetch('/api/reservations')
         .then(response => response.json())
         .then(data => {
             const tableBody = document.getElementById('reservation-table-body');
-            tableBody.innerHTML = data.map(reservation => `
-                <tr>
+            tableBody.innerHTML = '';
+
+            data.forEach(reservation => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
                     <td>${reservation.id}</td>
                     <td>${reservation.name}</td>
                     <td>${reservation.contact}</td>
                     <td>${reservation.status}</td>
+                    <td><img src="data:image/png;base64,${reservation.qr_code}" class="qr-code" alt="QR Code"></td>
                     <td>
-                        <img src="/qr-codes/${reservation.id}.png" alt="QRコード" class="qr-code" />
-                    </td>
-                    <td>
-                        <button onclick="updateStatus(${reservation.id}, 'approved')">承認</button>
+                        <button onclick="updateStatus(${reservation.id}, 'checked-in')">入場</button>
+                        <button onclick="updateStatus(${reservation.id}, 'cancelled')">キャンセル</button>
                         <button onclick="deleteReservation(${reservation.id})">削除</button>
                     </td>
-                </tr>
-            `).join('');
+                `;
+                tableBody.appendChild(row);
+            });
         })
-        .catch(error => console.error('予約情報の取得エラー:', error));
+        .catch(error => console.error('予約情報取得エラー:', error));
 }
 
-// 状態更新処理
+// リアルタイム入場者数を更新する機能
+function updateAttendanceCount() {
+    fetch('/api/attendance')
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('attendance-count').textContent = `現在の入場者数: ${data.count}`;
+        })
+        .catch(error => console.error('入場者数取得エラー:', error));
+}
+
+// 予約のステータスを更新する
 function updateStatus(id, status) {
     fetch(`/api/reservations/${id}`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+            'Content-Type': 'application/json'
+        },
         body: JSON.stringify({ status })
     })
-    .then(response => response.text())
-    .then(message => {
-        alert(message);
-        fetchReservations(); // 更新後に再取得
+    .then(response => response.json())
+    .then(data => {
+        console.log(data.message);
+        updateReservations();
     })
-    .catch(error => console.error('状態更新エラー:', error));
+    .catch(error => console.error('ステータス更新エラー:', error));
 }
 
-// 予約削除処理
+// 予約を削除する
 function deleteReservation(id) {
-    fetch(`/api/reservations/${id}`, { method: 'DELETE' })
-    .then(response => response.text())
-    .then(message => {
-        alert(message);
-        fetchReservations(); // 更新後に再取得
+    fetch(`/api/reservations/${id}`, {
+        method: 'DELETE'
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log(data.message);
+        updateReservations();
     })
     .catch(error => console.error('予約削除エラー:', error));
 }
 
-// ゲスト検索を実行する
+// ゲスト検索機能
 function searchGuests() {
     const query = document.getElementById('search-query').value;
-    fetch(`/api/search?q=${encodeURIComponent(query)}`)
-        .then(response => response.json())
-        .then(results => {
-            const resultsDiv = document.getElementById('search-results');
-            resultsDiv.innerHTML = results.map(guest => `
-                <div>
-                    <p>ID: ${guest.id}</p>
-                    <p>名前: ${guest.name}</p>
-                    <p>連絡先: ${guest.contact}</p>
-                    <p>状態: ${guest.status}</p>
-                </div>
-            `).join('');
-        })
-        .catch(error => console.error('ゲスト検索エラー:', error));
-}
-
-// リアルタイム入場者数を更新する
-function updateAttendance() {
-    fetch('/api/attendance')
+    fetch(`/api/search?q=${query}`)
         .then(response => response.json())
         .then(data => {
-            const attendanceCount = document.getElementById('attendance-count');
-            attendanceCount.textContent = `現在の入場者数: ${data.count}`;
+            const searchResults = document.getElementById('search-results');
+            searchResults.innerHTML = '<h3>検索結果</h3>';
+            const resultTable = document.createElement('table');
+            resultTable.innerHTML = `
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>名前</th>
+                        <th>連絡先</th>
+                        <th>状態</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${data.map(result => `
+                        <tr>
+                            <td>${result.id}</td>
+                            <td>${result.name}</td>
+                            <td>${result.contact}</td>
+                            <td>${result.status}</td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            `;
+            searchResults.appendChild(resultTable);
         })
-        .catch(error => console.error('入場者数更新エラー:', error));
+        .catch(error => console.error('検索エラー:', error));
 }
 
-// QRコードスキャナーを開始する
-function startQRCodeScanner() {
+// QRコードスキャナーの初期化
+function initQrScanner() {
     const html5QrCode = new Html5Qrcode("reader");
-
-    html5QrCode.start(
-        { facingMode: "environment" },
-        {
-            fps: 10,    // フレームレート (1秒あたりのフレーム数)
-            qrbox: 250  // QRコードの検出領域のサイズ (px)
-        },
-        qrCodeMessage => {
-            // QRコードが検出されたときの処理
-            document.getElementById('result').textContent = `QRコードの内容: ${qrCodeMessage}`;
-            // ここにQRコードスキャン後の追加処理を実装
-        },
-        errorMessage => {
-            // QRコードが検出されなかったときの処理
-            console.error('QRコード検出エラー:', errorMessage);
-        })
-    .catch(err => {
-        console.error('QRコードスキャナー起動エラー:', err);
+    html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, (decodedText, decodedResult) => {
+        document.getElementById('result').textContent = `スキャン結果: ${decodedText}`;
+        // QRコードスキャン後の処理
+        // 例えば、データベースにスキャン結果を送信するなど
+    }).catch(error => {
+        console.error('QRコードスキャンエラー:', error);
     });
 }
+
+// ページがロードされたときに呼ばれる関数
+window.onload = () => {
+    updateReservations();
+    updateAttendanceCount();
+    initQrScanner();
+    setInterval(updateReservations, 5000); // 5秒ごとに予約情報を更新
+    setInterval(updateAttendanceCount, 10000); // 10秒ごとに入場者数を更新
+};

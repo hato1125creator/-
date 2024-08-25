@@ -1,42 +1,31 @@
+/* スタイルの追加 */
 body {
-    font-family: Arial, sans-serif;
-    margin: 0;
-    padding: 0;
-    background-color: #f4f4f4;
+    background-color: #f9f9f9;
 }
 
 h1, h2 {
-    text-align: center;
     color: #333;
 }
 
-table {
-    width: 80%;
-    margin: 20px auto;
-    border-collapse: collapse;
+.table-container {
+    margin-bottom: 20px;
 }
 
-table, th, td {
-    border: 1px solid #ddd;
-}
-
-th, td {
-    padding: 12px;
-    text-align: center;
-}
-
-#search-guest {
-    text-align: center;
-    margin: 20px 0;
-}
-
-#search-input {
-    padding: 8px;
-    width: 60%;
-}
-
-#search-button {
-    padding: 8px 16px;
-    margin-left: 10px;
+button {
+    padding: 10px 15px;
+    border: none;
+    background-color: #007bff;
+    color: #fff;
     cursor: pointer;
+    border-radius: 4px;
+}
+
+button:hover {
+    background-color: #0056b3;
+}
+
+#reader {
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background-color: #fff;
 }
